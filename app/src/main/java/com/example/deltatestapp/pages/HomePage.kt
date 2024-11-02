@@ -10,11 +10,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.deltatestapp.AuthState
 import com.example.deltatestapp.AuthViewModel
-
 
 @Composable
 fun HomePage(
@@ -23,7 +23,7 @@ fun HomePage(
     authViewModel: AuthViewModel
 ) {
     val authState = authViewModel.authState.observeAsState()
-    val username = authViewModel.username
+    val username = authViewModel.currentUsername
 
     LaunchedEffect(authState.value) {
         when (authState.value) {
@@ -36,11 +36,15 @@ fun HomePage(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Welcome ${username ?: "User"}", fontSize = 32.sp)
+        Text(
+            text = "Welcome ${username ?: "User"}",
+            fontSize = 32.sp,
+            modifier = Modifier.testTag("welcomeNote")
+        )
 
         TextButton(onClick = {
             authViewModel.signout()
-        }) {
+        }, modifier = Modifier.testTag("signoutLink")) {
             Text(text = "Sign out")
         }
     }
