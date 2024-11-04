@@ -13,7 +13,7 @@ class AuthViewModel : ViewModel() {
 
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
-    var currentUsername: String? = null
+    var username: String? = null
 
     init {
         checkAuthStatus()
@@ -24,35 +24,31 @@ class AuthViewModel : ViewModel() {
             _authState.value = AuthState.Unauthenticated
         } else {
             _authState.value = AuthState.Authenticated
-            currentUsername = auth.currentUser?.displayName
+            username = auth.currentUser?.displayName
         }
     }
 
     fun signin(email: String, password: String) {
+        if (email.isEmpty() || password.isEmpty()) {
+            _authState.value = AuthState.Error("Email or Password can't be empty")
+            return
+        }
+        _authState.value = AuthState.Loading
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Fetch username after successful sign-in
-                    val userId = auth.currentUser?.uid
-                    database.reference.child("users").child(userId!!)
-                        .child("username").get()
-                        .addOnSuccessListener { snapshot ->
-                            currentUsername = snapshot.value as? String
-                            _authState.value = AuthState.Authenticated
-                        }
-                        .addOnFailureListener {
-                            _authState.value = AuthState.Error("Failed to retrieve username")
-                        }
+                    _authState.value = AuthState.Authenticated
                 } else {
                     _authState.value =
-                        AuthState.Error(task.exception?.message ?: "Invalid email or password")
+                        AuthState.Error(task.exception?.message ?: "Something went wrong")
                 }
+
             }
     }
 
     fun signup(email: String, password: String, username: String) {
-        if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
-            _authState.value = AuthState.Error("Email, Password, and Username can't be empty")
+        if (email.isEmpty() || password.isEmpty()) {
+            _authState.value = AuthState.Error("Email or Password can't be empty")
             return
         }
         _authState.value = AuthState.Loading
@@ -62,25 +58,28 @@ class AuthViewModel : ViewModel() {
                     // Update user profile with username
                     auth.currentUser?.updateProfile(
                         UserProfileChangeRequest.Builder()
-                            .setDisplayName(username)
-                            .build()
-                    )?.addOnCompleteListener { updateTask ->
-                        if (updateTask.isSuccessful) {
-                            val userId = auth.currentUser?.uid
-                            val userData = hashMapOf("username" to username)
-                            database.reference.child("users").child(userId!!)
-                                .setValue(userData)
-                                .addOnSuccessListener {
-                                    currentUsername = username // Set the current username
-                                    _authState.value = AuthState.Authenticated
-                                }
-                                .addOnFailureListener {
-                                    _authState.value = AuthState.Error("Failed to save username")
-                                }
-                        } else {
-                            _authState.value = AuthState.Error("Failed to set username")
+                            .setDisplayName(username).build()
+                    )
+                        ?.addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                // Save the username to firebase
+                                val userId = auth.currentUser?.uid
+                                val userData = hashMapOf("username" to username)
+
+                                // Using Realtime Database to save the username
+                                database.reference.child("users").child(userId!!)
+                                    .setValue(userData)
+                                    .addOnSuccessListener {
+                                        _authState.value = AuthState.Authenticated
+                                    }
+                                    .addOnFailureListener {
+                                        _authState.value =
+                                            AuthState.Error("Failed to save username")
+                                    }
+                            } else {
+                                _authState.value = AuthState.Error("Failed to set username")
+                            }
                         }
-                    }
                 } else {
                     _authState.value =
                         AuthState.Error(task.exception?.message ?: "Something went wrong")

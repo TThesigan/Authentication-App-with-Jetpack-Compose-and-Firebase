@@ -36,9 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
@@ -82,16 +79,15 @@ fun SignupPage(
     }
 
     // Determine if the button should be enabled
-    val isButtonEnabled =
-        userName.isNotEmpty() && email.isNotEmpty() && emailError.isEmpty() && password.length >= 6 &&
-                selectedCity != "Choose your city" && chkBoxTerms
+    val isButtonEnabled = userName.isNotEmpty() && email.isNotEmpty() && password.length >= 6 &&
+            selectedCity != "Choose your city" && chkBoxTerms
 
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Sign up", fontSize = 32.sp, modifier = Modifier.testTag("signupTitle"))
+        Text(text = "Sign up", fontSize = 32.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Username Text field
@@ -100,8 +96,7 @@ fun SignupPage(
             onValueChange = { userName = it },
             label = {
                 Text(text = "User Name")
-            }, modifier = Modifier.testTag("userNameEditText")
-        )
+            })
         Spacer(modifier = Modifier.height(8.dp))
 
         // Email Text field
@@ -116,20 +111,17 @@ fun SignupPage(
                     ""
                 }
             },
-            label = { Text(text = "Email") },
-            modifier = Modifier.testTag("emailEditText")
+            label = { Text(text = "Email") }
         )
         if (emailError.isNotEmpty()) {
             Text(
                 text = emailError,
                 color = Color.Red,
                 fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 4.dp
-                    )
-                    .testTag("emailErrorMsg")
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    top = 4.dp
+                ) // Add padding to align with the text field
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -137,30 +129,19 @@ fun SignupPage(
         // Password text field
         OutlinedTextField(
             value = password,
-            onValueChange = {
-                password = it
-                // Validate email format
-                passwordError = if (it.length < 6) {
-                    "Password must be at least 6 characters long"
-                } else {
-                    ""
-                }
-            },
+            onValueChange = { password = it },
             label = { Text(text = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.testTag("passwordEditText")
+            visualTransformation = PasswordVisualTransformation()
         )
         if (passwordError.isNotEmpty()) {
             Text(
                 text = passwordError,
                 color = Color.Red,
                 fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 4.dp
-                    )
-                    .testTag("passwordErrorMsg")
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    top = 4.dp
+                ) // Add padding to align with the text field
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -171,15 +152,13 @@ fun SignupPage(
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
                 selected = gender == "Male",
-                onClick = { gender = "Male" },
-                modifier = Modifier.testTag("radioM"),
+                onClick = { gender = "Male" }
             )
             Text(text = "Male", modifier = Modifier.padding(end = 16.dp))
 
             RadioButton(
                 selected = gender == "Female",
-                onClick = { gender = "Female" },
-                modifier = Modifier.testTag("radioF")
+                onClick = { gender = "Female" }
             )
             Text(text = "Female")
         }
@@ -196,17 +175,12 @@ fun SignupPage(
                 label = { Text(text = "City") },
                 readOnly = true,
                 trailingIcon = {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown arrow",
-                        modifier = Modifier.testTag("dropdownArrow")
-                    )
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown arrow")
                 },
                 modifier = Modifier
                     .menuAnchor()
                     .align(Alignment.CenterHorizontally)
-                    .clickable { expanded = true }
-                    .testTag("DropDownText")
+                    .clickable { expanded = true } // Ensure dropdown opens on click
             )
             DropdownMenu(
                 expanded = expanded,
@@ -218,8 +192,7 @@ fun SignupPage(
                         onClick = {
                             selectedCity = city
                             expanded = false
-                        },
-                        modifier = Modifier.testTag("dropDownOption")
+                        }
                     )
                 }
             }
@@ -233,8 +206,7 @@ fun SignupPage(
         ) {
             Checkbox(
                 checked = chkBoxTerms,
-                onCheckedChange = { chkBoxTerms = it },
-                modifier = Modifier.testTag("TermsCheckBox")
+                onCheckedChange = { chkBoxTerms = it }
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -248,19 +220,15 @@ fun SignupPage(
 
         // Submit button for sign up
         Button(
-            onClick = { authViewModel.signup(email, password, userName) },
-            enabled = isButtonEnabled && authState.value != AuthState.Loading,
-            modifier = Modifier
-                .testTag("signupBtn")
-                .semantics {
-                    contentDescription = when {
-                        !isButtonEnabled -> "button_disabled"
-                        password.length < 6 -> "button_disabled"
-                        emailError.isNotEmpty() -> "button_disabled"
-                        authState.value == AuthState.Loading -> "button_disabled"
-                        else -> "button_enabled"
-                    }
+            onClick = {
+                if (password.length < 6) {
+                    passwordError = "Password must be at least 6 characters long"
+                } else {
+                    passwordError = ""
+                    authViewModel.signup(email, password, userName)
                 }
+            },
+            enabled = isButtonEnabled && authState.value != AuthState.Loading
         )
         {
             Text(text = "Create account")
@@ -270,7 +238,7 @@ fun SignupPage(
         // Link for sign in
         TextButton(onClick = {
             navController.navigate("signin")
-        }, modifier = Modifier.testTag("signInLink")) {
+        }) {
             Text(text = "Already have an account, Sign in")
         }
 

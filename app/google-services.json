@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "146183818263",
-    "project_id": "deltatestapp-efaf6",
-    "storage_bucket": "deltatestapp-efaf6.appspot.com"
+    "project_number": "",
+    "project_id": "",
+    "storage_bucket": ""
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:146183818263:android:b2e24c0ac6b401c21fa052",
+        "mobilesdk_app_id": "",
         "android_client_info": {
           "package_name": "com.example.deltatestapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD1b-CWcmcmHK91OTz1gXgJqXbUAvj53uY"
+          "current_key": ""
         }
       ],
       "services": {

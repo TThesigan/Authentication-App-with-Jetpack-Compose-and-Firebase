@@ -22,9 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
@@ -43,7 +40,6 @@ fun SigninPage(
     var password by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf("") }
-    var signinError by remember { mutableStateOf("") }
 
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
@@ -51,26 +47,21 @@ fun SigninPage(
     LaunchedEffect(authState.value) {
         when (authState.value) {
             is AuthState.Authenticated -> navController.navigate("home")
-            is AuthState.Error -> {
-                val errorMessage = "Invalid email or password"
-                if (errorMessage.contains("The supplied auth credential is incorrect")) {
-                    signinError = errorMessage
-                }
-                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-            }
+            is AuthState.Error -> Toast.makeText(
+                context,
+                (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT
+            ).show()
 
             else -> Unit
         }
     }
-
-    val isButtonEnabled = email.isNotEmpty() && password.isNotEmpty() && emailError.isEmpty()
 
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Sign in", fontSize = 32.sp, modifier = Modifier.testTag("signinTitle"))
+        Text(text = "Sign in", fontSize = 32.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Email Text field
@@ -85,20 +76,17 @@ fun SigninPage(
                     ""
                 }
             },
-            label = { Text(text = "Email") },
-            modifier = Modifier.testTag("emailEditText")
+            label = { Text(text = "Email") }
         )
         if (emailError.isNotEmpty()) {
             Text(
                 text = emailError,
                 color = Color.Red,
                 fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 4.dp
-                    )
-                    .testTag("emailErrorMsg")
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    top = 4.dp
+                ) // Add padding to align with the text field
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -107,50 +95,26 @@ fun SigninPage(
             value = password,
             onValueChange = { password = it },
             label = { Text(text = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.testTag("passwordEditText")
+            visualTransformation = PasswordVisualTransformation()
         )
         if (passwordError.isNotEmpty()) {
             Text(
                 text = passwordError,
                 color = Color.Red,
                 fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 4.dp
-                    )
-                    .testTag("passwordErrorMsg")
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = signinError,
-            color = Color.Red,
-            fontSize = 12.sp,
-            modifier = Modifier
-                .padding(
+                modifier = Modifier.padding(
                     start = 16.dp,
                     top = 4.dp
-                )
-                .testTag("signinErrorMsg")
-        )
+                ) // Add padding to align with the text field
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
                 authViewModel.signin(email, password)
             },
-            enabled = isButtonEnabled && authState.value != AuthState.Loading,
-            modifier = Modifier
-                .testTag("signinBtn")
-                .semantics {
-                    contentDescription = when {
-                        !isButtonEnabled -> "button_disabled"
-                        authState.value == AuthState.Loading -> "button_disabled"
-                        else -> "button_enabled"
-                    }
-                }
+            enabled = authState.value != AuthState.Loading
         )
         {
             Text(text = "Sign in")
@@ -159,7 +123,7 @@ fun SigninPage(
 
         TextButton(onClick = {
             navController.navigate("signup")
-        }, modifier = Modifier.testTag("signupLink")) {
+        }) {
             Text(text = "Don't have, Create an account")
         }
     }
